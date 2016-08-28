@@ -10,6 +10,7 @@ namespace WrapSharp {
 
                 if (Parser.Default.ParseArgumentsStrict(args, options)) {
                     options.Check();
+
                     Sandboxer sandboxer = new Sandboxer(options, metadata);
                     Watcher watcher = new Watcher(options, sandboxer, metadata);
 

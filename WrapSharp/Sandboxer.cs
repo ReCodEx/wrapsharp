@@ -57,8 +57,16 @@ namespace WrapSharp {
 
         private PermissionSet GetPermissionSet() {
             PermissionSet permSet = new PermissionSet(PermissionState.None);
-            permSet.AddPermission(new FileIOPermission(FileIOPermissionAccess.AllAccess, options.WorkingDirectory));
             permSet.AddPermission(new SecurityPermission(SecurityPermissionFlag.Execution));
+
+            // permissions for directories
+            permSet.AddPermission(new FileIOPermission(FileIOPermissionAccess.AllAccess, options.WorkingDirectory));
+            foreach (var dir in options.BoundDirectoriesParsed) {
+                foreach (var perm in dir.DirPermissions) {
+                    permSet.AddPermission(new FileIOPermission(perm, dir.DirPath));
+                }
+            }
+
             return permSet;
         }
 
