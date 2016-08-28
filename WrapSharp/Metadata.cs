@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.IO;
+﻿using System.IO;
 
 namespace WrapSharp {
     enum StatusCode { OK, RE, TO, ME, XX }
@@ -32,6 +29,15 @@ namespace WrapSharp {
 
         public Metadata() {
             Status = StatusCode.OK;
+        }
+
+        public void Update(double elapsed, double cpuElapsed, long memory) {
+            WallTime = elapsed;
+            CpuTime = cpuElapsed;
+
+            if (memory > Memory) {
+                Memory = memory;
+            }
         }
 
         public void SaveIfFileDefined(string file) {

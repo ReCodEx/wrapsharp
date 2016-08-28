@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Threading;
-using System.Diagnostics;
-using System.Threading.Tasks;
 
 namespace WrapSharp {
 
@@ -17,53 +15,51 @@ namespace WrapSharp {
             this.metadata = metadata;
         }
 
+        private void KillSandboxAndFillMeta(double elapsed, double cpuElapsed, long memory, string message, StatusCode status) {
+            AppDomain.Unload(sandboxer.SandboxDomain);
+
+            Console.Error.WriteLine("Sandbox killed: " + message);
+
+            metadata.Update(elapsed, cpuElapsed, memory);
+            metadata.Message = message;
+            metadata.Status = status;
+        }
+
         public void Run() {
             // wait for domain to create and run
-            sandboxer.WaitForExecutionEvent.Wait();
+            sandboxer.WaitForExecution();
 
             try {
                 while (true) {
-                    double elapsedSeconds = sandboxer.SandboxStartTime.Elapsed.TotalSeconds;
-                    double elapsedCpuSeconds = sandboxer.domain.MonitoringTotalProcessorTime.TotalSeconds;
-                    long usedMemory = sandboxer.domain.MonitoringSurvivedMemorySize;
-
-                    // fill in metadata in every iteration
-                    metadata.WallTime = elapsedSeconds;
-                    metadata.CpuTime = elapsedCpuSeconds;
-                    metadata.Memory = usedMemory;
+                    double elapsed = sandboxer.SandboxStartTime.Elapsed.TotalSeconds;
+                    double cpuElapsed = sandboxer.SandboxDomain.MonitoringTotalProcessorTime.TotalSeconds;
+                    long memory = sandboxer.SandboxDomain.MonitoringSurvivedMemorySize;
 
                     // sandboxed application is alive too long, kill it
-                    if (options.WallTime < elapsedSeconds) {
-                        AppDomain.Unload(sandboxer.domain);
-
-                        metadata.Message = "WallTime exceeded";
-                        metadata.Status = StatusCode.TO;
+                    if (options.WallTime < elapsed) {
+                        KillSandboxAndFillMeta(elapsed, cpuElapsed, memory, "WallTime exceeded", StatusCode.TO);
                         break;
                     }
 
                     // now do the same checking on cpu time
-                    if (options.CpuTime < elapsedCpuSeconds) {
-                        AppDomain.Unload(sandboxer.domain);
-
-                        metadata.Message = "CpuTime exceeded";
-                        metadata.Status = StatusCode.TO;
+                    if (options.CpuTime < cpuElapsed) {
+                        KillSandboxAndFillMeta(elapsed, cpuElapsed, memory, "CpuTime exceeded", StatusCode.TO);
                         break;
                     }
 
                     // and of course check memory
-                    if (options.Memory < usedMemory) {
-                        AppDomain.Unload(sandboxer.domain);
-
-                        metadata.Message = "Memory exceeded";
-                        metadata.Status = StatusCode.ME;
+                    if (options.Memory < memory) {
+                        KillSandboxAndFillMeta(elapsed, cpuElapsed, memory, "Memory exdeeded", StatusCode.ME);
                         break;
                     }
 
                     // if execution of sandboxed application ended, end too
                     if (!sandboxer.IsRunning) {
-                        metadata.Status = StatusCode.OK;
+                        // Sandboxer should update all values in metadata
                         break;
                     }
+
+                    metadata.Update(elapsed, cpuElapsed, memory);
 
                     Thread.Sleep(watcherPeriod);
                 }

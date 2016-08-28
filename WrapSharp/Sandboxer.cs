@@ -20,18 +20,22 @@ namespace WrapSharp {
     class Sandboxer {
         private Options options;
         private Metadata metadata;
-        public AppDomain domain { get; private set; }
+        public AppDomain SandboxDomain { get; private set; }
         public Stopwatch SandboxStartTime { get; private set; }
         public bool IsRunning { get; private set; }
-        public ManualResetEventSlim WaitForExecutionEvent { get; private set; }
+        private ManualResetEventSlim waitForExecutionEvent;
         private const string domainName = "WrapSharp Sandbox";
 
         public Sandboxer(Options options, Metadata metadata) {
             this.options = options;
             this.metadata = metadata;
             SandboxStartTime = new Stopwatch();
-            WaitForExecutionEvent = new ManualResetEventSlim();
+            waitForExecutionEvent = new ManualResetEventSlim();
             IsRunning = true;
+        }
+
+        public void WaitForExecution() {
+            waitForExecutionEvent.Wait();
         }
 
         private void CreateAppDomainAndPopulate() {
@@ -44,7 +48,7 @@ namespace WrapSharp {
 
             StrongName fullTrustAssembly = typeof(Sandbox).Assembly.Evidence.GetHostEvidence<StrongName>();
 
-            domain = AppDomain.CreateDomain(domainName, securityInfo,
+            SandboxDomain = AppDomain.CreateDomain(domainName, securityInfo,
                 appDomainSetup, permissionSet, fullTrustAssembly);
 
             // allow monitoring of domains
@@ -65,15 +69,19 @@ namespace WrapSharp {
                 CreateAppDomainAndPopulate();
 
                 ObjectHandle handle = Activator.CreateInstanceFrom(
-                    domain, typeof(Sandbox).Assembly.ManifestModule.FullyQualifiedName,
+                    SandboxDomain, typeof(Sandbox).Assembly.ManifestModule.FullyQualifiedName,
                     typeof(Sandbox).FullName);
 
                 Sandbox instance = (Sandbox) handle.Unwrap();
 
                 // start execution with measuring time
                 SandboxStartTime.Start();
-                WaitForExecutionEvent.Set();
+                waitForExecutionEvent.Set();
                 instance.Execute(Path.Combine(options.WorkingDirectory, options.ProgramName), options.ProgramArguments.ToArray());
+
+                // update metadata after successful execution
+                metadata.Update(SandboxStartTime.Elapsed.TotalSeconds,
+                    SandboxDomain.MonitoringTotalProcessorTime.TotalSeconds, SandboxDomain.MonitoringSurvivedMemorySize);
             } catch (AppDomainUnloadedException) {
                 // nothing to do here, watcher unloaded AppDomain
             } catch (Exception e) {
