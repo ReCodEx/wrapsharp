@@ -5,14 +5,14 @@ using CommandLine.Text;
 
 namespace WrapSharp {
     class Options {
-        [Option('M', "meta", DefaultValue = "", HelpText = "Meta data")]
+        [Option('l', "meta", DefaultValue = "", HelpText = "Meta data")]
         public string MetaFile { get; set; }
 
-        [Option('m', "mem", DefaultValue = ulong.MaxValue, HelpText = "Memory")]
-        public ulong Memory { get; set; }
+        [Option('m', "mem", DefaultValue = long.MaxValue, HelpText = "Memory")]
+        public long Memory { get; set; }
 
         [Option('t', "time", DefaultValue = double.MaxValue, HelpText = "Time")]
-        public double Time { get; set; }
+        public double CpuTime { get; set; }
 
         [Option('w', "wall-time", DefaultValue = double.MaxValue, HelpText = "WallTime")]
         public double WallTime { get; set; }
@@ -61,17 +61,19 @@ namespace WrapSharp {
                 }
             }
 
-            // TODO: check directories, program name if exists
             // TODO: isnt double.MaxValue too high, what if we define a bit less limits (0-3600 or sth else)
 
-            if (Time < 0) {
-                Time = double.MaxValue;
+            if (CpuTime < 0) {
+                CpuTime = double.MaxValue;
             }
             if (WallTime < 0) {
                 WallTime = double.MaxValue;
             }
             if (ExtraTime < 0) {
                 ExtraTime = double.MaxValue;
+            }
+            if (Memory < 0) {
+                Memory = long.MaxValue;
             }
         }
     }

@@ -4,13 +4,13 @@ using System.Text;
 using System.IO;
 
 namespace WrapSharp {
-    enum StatusCode { OK, RE, TO, XX }
+    enum StatusCode { OK, RE, TO, ME, XX }
 
     class Metadata {
-        public ulong Memory { get; set; }
-        public double Time { get; set; }
+        public long Memory { get; set; }
+        public double CpuTime { get; set; }
         public double WallTime { get; set; }
-        public int ExitCode { get; set; }
+        public string ExceptionType { get; set; }
         public string Message { get; set; }
         public StatusCode Status { get; set; }
 
@@ -23,6 +23,8 @@ namespace WrapSharp {
                 return "RE";
                 case StatusCode.TO:
                 return "TO";
+                case StatusCode.ME:
+                return "ME";
                 default:
                 return "XX";
             }
@@ -38,12 +40,12 @@ namespace WrapSharp {
             }
 
             using (StreamWriter writer = new StreamWriter(file)) {
-                writer.WriteLine("mem:" + Memory);
-                writer.WriteLine("time:" + Time);
-                writer.WriteLine("wall-time:" + WallTime);
-                writer.WriteLine("exitcode:" + ExitCode);
-                writer.WriteLine("message:" + Message);
-                writer.WriteLine("status:" + StatusCodeToString(Status));
+                writer.WriteLine("mem: " + Memory);
+                writer.WriteLine("time: " + CpuTime);
+                writer.WriteLine("wall-time: " + WallTime);
+                writer.WriteLine("exception: " + ExceptionType);
+                writer.WriteLine("message: " + Message);
+                writer.WriteLine("status: " + StatusCodeToString(Status));
             }
         }
     }
