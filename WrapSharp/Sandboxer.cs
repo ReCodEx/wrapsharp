@@ -57,7 +57,12 @@ namespace WrapSharp {
 
         private PermissionSet GetPermissionSet() {
             PermissionSet permSet = new PermissionSet(PermissionState.None);
+
+            // allow execution within sandbox
             permSet.AddPermission(new SecurityPermission(SecurityPermissionFlag.Execution));
+
+            // allow reflection within sandbox
+            permSet.AddPermission(new ReflectionPermission(PermissionState.Unrestricted));
 
             // permissions for directories
             permSet.AddPermission(new FileIOPermission(FileIOPermissionAccess.AllAccess, options.WorkingDirectory));
