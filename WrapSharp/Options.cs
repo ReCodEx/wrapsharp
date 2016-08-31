@@ -88,6 +88,10 @@ namespace WrapSharp {
             if (Memory < 0) {
                 Memory = long.MaxValue;
             }
+
+            if (Verbose) {
+                Console.WriteLine("> Commandline options successfully checked");
+            }
         }
     }
 }

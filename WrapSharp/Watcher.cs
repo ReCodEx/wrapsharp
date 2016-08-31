@@ -13,6 +13,10 @@ namespace WrapSharp {
             this.options = options;
             this.sandboxer = sandboxer;
             this.metadata = metadata;
+
+            if (options.Verbose) {
+                Console.WriteLine("> Watcher constructed");
+            }
         }
 
         private void KillSandboxAndFillMeta(double elapsed, double cpuElapsed, long memory, string message, StatusCode status) {
@@ -28,6 +32,10 @@ namespace WrapSharp {
         public void Run() {
             // wait for domain to create and run
             sandboxer.WaitForExecution();
+
+            if (options.Verbose) {
+                Console.WriteLine("> Watcher started monitoring sandboxed program");
+            }
 
             try {
                 while (true) {
@@ -69,6 +77,10 @@ namespace WrapSharp {
                 metadata.Status = StatusCode.XX;
                 metadata.ExceptionType = e.GetType().Name;
                 metadata.Message = e.Message;
+            }
+
+            if (options.Verbose) {
+                Console.WriteLine("> Watcher ended monitoring");
             }
         }
     }

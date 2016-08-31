@@ -32,6 +32,10 @@ namespace WrapSharp {
             SandboxStartTime = new Stopwatch();
             waitForExecutionEvent = new ManualResetEventSlim();
             IsRunning = true;
+
+            if (options.Verbose) {
+                Console.WriteLine("> Sandboxer constructed");
+            }
         }
 
         public void WaitForExecution() {
@@ -53,6 +57,10 @@ namespace WrapSharp {
 
             // allow monitoring of domains
             AppDomain.MonitoringIsEnabled = true;
+
+            if (options.Verbose) {
+                Console.WriteLine("> AppDomain successfully created");
+            }
         }
 
         private PermissionSet GetPermissionSet() {
@@ -87,6 +95,10 @@ namespace WrapSharp {
 
                 Sandbox instance = (Sandbox) handle.Unwrap();
 
+                if (options.Verbose) {
+                    Console.WriteLine("> Execution of sandboxed program started");
+                }
+
                 // start execution with measuring time
                 SandboxStartTime.Start();
                 waitForExecutionEvent.Set();
@@ -95,6 +107,10 @@ namespace WrapSharp {
                 // update metadata after successful execution
                 metadata.Update(SandboxStartTime.Elapsed.TotalSeconds,
                     SandboxDomain.MonitoringTotalProcessorTime.TotalSeconds, SandboxDomain.MonitoringSurvivedMemorySize);
+
+                if (options.Verbose) {
+                    Console.WriteLine("> Sandboxed program successfully ended");
+                }
             } catch (AppDomainUnloadedException) {
                 // nothing to do here, watcher unloaded AppDomain
             } catch (Exception e) {
