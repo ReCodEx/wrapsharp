@@ -17,7 +17,7 @@ namespace WrapSharp {
                     sandboxer.Execute();
                     watcher.Run();
 
-                    metadata.SaveIfFileDefined(options.MetaFile);
+                    metadata.SaveIfFileDefined(options.MetaFile, options.Verbose);
                 }
             } catch (Exception e) {
                 Console.Error.WriteLine(e.ToString());

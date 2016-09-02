@@ -8,16 +8,16 @@ namespace WrapSharp {
         [Option('l', "meta", DefaultValue = "", HelpText = "Meta data")]
         public string MetaFile { get; set; }
 
-        [Option('m', "mem", DefaultValue = long.MaxValue, HelpText = "Memory")]
+        [Option('m', "mem", HelpText = "Memory", Required = true)]
         public long Memory { get; set; }
 
-        [Option('t', "time", DefaultValue = double.MaxValue, HelpText = "Time")]
+        [Option('t', "cpu-time", HelpText = "CpuTime", Required = true)]
         public double CpuTime { get; set; }
 
-        [Option('w', "wall-time", DefaultValue = double.MaxValue, HelpText = "WallTime")]
+        [Option('w', "wall-time", HelpText = "WallTime", Required = true)]
         public double WallTime { get; set; }
 
-        [Option('x', "extra-time", DefaultValue = double.MaxValue, HelpText = "ExtraTime")]
+        [Option('x', "extra-time", HelpText = "ExtraTime", Required = true)]
         public double ExtraTime { get; set; }
 
         [Option('i', "stdin", DefaultValue = "", HelpText = "Stdin")]
@@ -29,7 +29,7 @@ namespace WrapSharp {
         [Option('r', "stderr", DefaultValue = "", HelpText = "Stderr")]
         public string Stderr { get; set; }
 
-        [Option('d', "working-dir", DefaultValue = "", HelpText = "WorkingDirectory, has to be absolute path", Required = true)]
+        [Option('d', "working-dir", HelpText = "WorkingDirectory, has to be absolute path", Required = true)]
         public string WorkingDirectory { get; set; }
 
         [OptionList('b', "bound-dir", Separator = ',', DefaultValue = null, HelpText = "Bound directories which sandbox can access (or else), has to be absolute path")]
@@ -74,19 +74,17 @@ namespace WrapSharp {
                 }
             }
 
-            // TODO: isnt double.MaxValue too high, what if we define a bit less limits (0-3600 or sth else)
-
             if (CpuTime < 0) {
-                CpuTime = double.MaxValue;
+                CpuTime = 0;
             }
             if (WallTime < 0) {
-                WallTime = double.MaxValue;
+                WallTime = 0;
             }
             if (ExtraTime < 0) {
-                ExtraTime = double.MaxValue;
+                ExtraTime = 0;
             }
             if (Memory < 0) {
-                Memory = long.MaxValue;
+                Memory = 0;
             }
 
             if (Verbose) {

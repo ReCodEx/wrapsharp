@@ -38,13 +38,16 @@ namespace WrapSharp {
             }
 
             try {
+                double time = options.WallTime + options.ExtraTime;
+                Console.WriteLine(time);
+
                 while (true) {
                     double elapsed = sandboxer.SandboxStartTime.Elapsed.TotalSeconds;
                     double cpuElapsed = sandboxer.SandboxDomain.MonitoringTotalProcessorTime.TotalSeconds;
                     long memory = sandboxer.SandboxDomain.MonitoringSurvivedMemorySize;
 
                     // sandboxed application is alive too long, kill it
-                    if (options.WallTime < elapsed) {
+                    if (time < elapsed) {
                         KillSandboxAndFillMeta(elapsed, cpuElapsed, memory, "WallTime exceeded", StatusCode.TO);
                         break;
                     }

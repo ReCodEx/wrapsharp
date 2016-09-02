@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using System.Text;
 
 namespace WrapSharp {
     enum StatusCode { OK, RE, TO, ME, XX }
@@ -40,18 +42,29 @@ namespace WrapSharp {
             }
         }
 
-        public void SaveIfFileDefined(string file) {
-            if (file == null || file.Length == 0) {
+        public void SaveIfFileDefined(string file, bool copyToOut = false) {
+            if ((file == null || file.Length == 0) && copyToOut == false) {
                 return;
             }
 
-            using (StreamWriter writer = new StreamWriter(file)) {
-                writer.WriteLine("mem: " + Memory);
-                writer.WriteLine("time: " + CpuTime);
-                writer.WriteLine("wall-time: " + WallTime);
-                writer.WriteLine("exception: " + ExceptionType);
-                writer.WriteLine("message: " + Message);
-                writer.WriteLine("status: " + StatusCodeToString(Status));
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("mem: " + Memory);
+            sb.AppendLine("time: " + CpuTime);
+            sb.AppendLine("wall-time: " + WallTime);
+            sb.AppendLine("exception: " + ExceptionType);
+            sb.AppendLine("message: " + Message);
+            sb.AppendLine("status: " + StatusCodeToString(Status));
+
+            if (file != null && file.Length != 0) {
+                using (StreamWriter writer = new StreamWriter(file)) {
+                    writer.Write(sb);
+                }
+            }
+
+            if (copyToOut) {
+                Console.WriteLine(">>> Metadata log <<<");
+                Console.Write(sb);
+                Console.WriteLine(">>> Metadata log <<<");
             }
         }
     }
