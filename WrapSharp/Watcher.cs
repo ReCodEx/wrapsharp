@@ -39,7 +39,6 @@ namespace WrapSharp {
 
             try {
                 double time = options.WallTime + options.ExtraTime;
-                Console.WriteLine(time);
 
                 while (true) {
                     double elapsed = sandboxer.SandboxStartTime.Elapsed.TotalSeconds;

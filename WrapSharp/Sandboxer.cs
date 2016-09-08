@@ -11,7 +11,25 @@ using System.Threading.Tasks;
 
 namespace WrapSharp {
     class Sandbox : MarshalByRefObject {
-        public void Execute(string assemblyName, string[] parameters) {
+
+        private TextReader oldIn;
+        private TextWriter oldOut;
+        private TextWriter oldError;
+
+        public Sandbox() {
+            oldIn = Console.In;
+            oldOut = Console.Out;
+            oldError = Console.Error;
+        }
+
+        public void Execute(string assemblyName, string[] parameters,
+            TextReader newIn = null, TextWriter newOut = null,
+            TextWriter newError = null) {
+
+            if (newIn != null) { Console.SetIn(newIn); }
+            if (newOut != null) { Console.SetOut(newOut); }
+            if (newError != null) { Console.SetError(newError); }
+
             MethodInfo method = Assembly.LoadFile(assemblyName).EntryPoint;
             method.Invoke(null, new object[] { parameters });
         }
@@ -102,7 +120,9 @@ namespace WrapSharp {
                 // start execution with measuring time
                 SandboxStartTime.Start();
                 waitForExecutionEvent.Set();
-                instance.Execute(Path.Combine(options.WorkingDirectory, options.ProgramName), options.ProgramArguments.ToArray());
+                instance.Execute(Path.Combine(options.WorkingDirectory, options.ProgramName), 
+                    options.ProgramArguments.ToArray(),
+                    options.newIn, options.newOut, options.newError);
 
                 // update metadata after successful execution
                 metadata.Update(SandboxStartTime.Elapsed.TotalSeconds,

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using CommandLine;
 using CommandLine.Text;
+using System.IO;
 
 namespace WrapSharp {
     class Options {
@@ -49,6 +50,10 @@ namespace WrapSharp {
         public string ProgramName { get; private set; }
         public List<string> ProgramArguments { get; private set; }
         public List<BoundDirectory> BoundDirectoriesParsed { get; private set; }
+        
+        public TextReader newIn { get; private set; }
+        public TextWriter newOut { get; private set; }
+        public TextWriter newError { get; private set; }
 
         public Options() {
             ProgramName = "";
@@ -86,6 +91,10 @@ namespace WrapSharp {
             if (Memory < 0) {
                 Memory = 0;
             }
+
+            if (Stdin.Length != 0) { newIn = new StreamReader(Stdin); }
+            if (Stdout.Length != 0) { newOut = new StreamWriter(Stdout); }
+            if (Stderr.Length != 0) { newError = new StreamWriter(Stderr); }
 
             if (Verbose) {
                 Console.WriteLine("> Commandline options successfully checked");
