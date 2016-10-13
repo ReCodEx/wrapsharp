@@ -32,6 +32,9 @@ namespace WrapSharp {
 
             MethodInfo method = Assembly.LoadFile(assemblyName).EntryPoint;
             method.Invoke(null, new object[] { parameters });
+
+            newOut.Flush();
+            newError.Flush();
         }
     }
 
@@ -44,6 +47,10 @@ namespace WrapSharp {
         private ManualResetEventSlim waitForExecutionEvent;
         private const string domainName = "WrapSharp Sandbox";
 
+        private TextReader newIn;
+        private TextWriter newOut;
+        private TextWriter newError;
+
         public Sandboxer(Options options, Metadata metadata) {
             this.options = options;
             this.metadata = metadata;
@@ -51,8 +58,25 @@ namespace WrapSharp {
             waitForExecutionEvent = new ManualResetEventSlim();
             IsRunning = true;
 
+            InitNewStandardInOut();
+
             if (options.Verbose) {
                 Console.WriteLine("> Sandboxer constructed");
+            }
+        }
+
+        private void InitNewStandardInOut() {
+            // construct readers/writers for standard input, output and error
+            if (options.Stdin != null && options.Stdin.Length != 0) {
+                newIn = new StreamReader(options.Stdin);
+            }
+
+            if (options.Stdout != null && options.Stdout.Length != 0) {
+                newOut = new StreamWriter(options.Stdout);
+            }
+
+            if (options.Stderr != null && options.Stderr.Length != 0) {
+                newError = new StreamWriter(options.Stderr);
             }
         }
 
@@ -66,7 +90,7 @@ namespace WrapSharp {
             AppDomainSetup appDomainSetup = new AppDomainSetup();
             appDomainSetup.ApplicationBase = options.WorkingDirectory;
 
-            PermissionSet permissionSet = GetPermissionSet();
+            PermissionSet permissionSet = CreatePermissionSet();
 
             StrongName fullTrustAssembly = typeof(Sandbox).Assembly.Evidence.GetHostEvidence<StrongName>();
 
@@ -81,11 +105,14 @@ namespace WrapSharp {
             }
         }
 
-        private PermissionSet GetPermissionSet() {
+        private PermissionSet CreatePermissionSet() {
             PermissionSet permSet = new PermissionSet(PermissionState.None);
 
-            // allow execution within sandbox
+            // allow execution of managed code within sandbox
             permSet.AddPermission(new SecurityPermission(SecurityPermissionFlag.Execution));
+
+            // TODO: why unmanaged code flag, when only thing changing is Console.SetIn() Console.SetOut()...?
+            permSet.AddPermission(new SecurityPermission(SecurityPermissionFlag.UnmanagedCode));
 
             // allow reflection within sandbox
             permSet.AddPermission(new ReflectionPermission(PermissionState.Unrestricted));
@@ -121,8 +148,7 @@ namespace WrapSharp {
                 SandboxStartTime.Start();
                 waitForExecutionEvent.Set();
                 instance.Execute(Path.Combine(options.WorkingDirectory, options.ProgramName), 
-                    options.ProgramArguments.ToArray(),
-                    options.newIn, options.newOut, options.newError);
+                    options.ProgramArguments.ToArray(), newIn, newOut, newError);
 
                 // update metadata after successful execution
                 metadata.Update(SandboxStartTime.Elapsed.TotalSeconds,
